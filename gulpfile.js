@@ -11,7 +11,9 @@ const gulp = require('gulp'),
       watcher = require('gulp-watch'),
       browserSync = require('browser-sync').create(),
       reload = browserSync.reload,
-      imagemin = require('gulp-imagemin');
+      imagemin = require('gulp-imagemin'),
+      tiny = require('gulp-tinypng-nokey'),
+      pngquant = require('imagemin-pngquant');
 
 const src = path.join(__dirname, 'src'),
       st = path.join(__dirname, 'static');
@@ -68,12 +70,24 @@ gulp.task('watch', ['pug', 'less'], function(){
   watcher(st + '/js/**/*', reload)
 });
 
-gulp.task('compress', function() {
-  gulp.src(st + '/img/**/*')
-  .pipe(imagemin())
-  .pipe(gulp.dest(st + '/img/compress'));
+gulp.task('compress', function () {
+  function png() {
+    return gulp.src(st + '/img/**/*{png, PNG}')
+      .pipe(tiny())
+      .pipe(gulp.dest(st + '/img/compressed')); 
+  }
+  function all() {
+    return gulp.src(st + '/img/**/*{jpg,jpeg,gif,svg,JPG}')
+      .pipe(imagemin({
+        progressive: true,
+        optimizationLevel: 10,
+        svgoPlugins: [{removeViewBox: false}],
+        use: [pngquant()]
+      }))
+      .pipe(gulp.dest(st + '/img/compressed')); 
+  }
+  all();
+  png();
 });
-
-
 
 
